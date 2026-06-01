@@ -28,7 +28,7 @@ public class UserService {
         User user = new User(
                 request.getEmail(),
                 encodedPassword,
-                request.getNickName()
+                request.getNickname()
         );
 
         userRepository.save(user);
@@ -39,11 +39,11 @@ public class UserService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이메일입니다."));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) { //사용자가 입력한 비밀번호와 DB에 암호화 저장된 비밀번호가 같은 원본인지 비교
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-        return jwtTokenProvider.createToken(user.getEmail()); //로그인을 성공하면 이메일을 담은 JWT 토큰을 만들어서 준다.
+        return jwtTokenProvider.createToken(user.getEmail());
     }
 
     public String getMyEmail(String token) {
