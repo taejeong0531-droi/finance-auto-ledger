@@ -42,4 +42,15 @@ public class TransactionController {
 
         return ResponseEntity.ok(transactions);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<String> update(
+            @PathVariable Long id,
+            @RequestBody TransactionRequest request
+    ) {
+
+        transactionService.update(id, request);
+
+        return ResponseEntity.ok("거래 수정 성공");
+    }
 }

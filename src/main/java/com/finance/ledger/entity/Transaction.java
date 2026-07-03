@@ -30,4 +30,10 @@ public class Transaction {
         this.type = type;
         this.user = user;
     }
+
+    public void update(Integer amount, String description, String type) {
+        this.amount = amount;
+        this.description = description;
+        this.type = type;
+    }
 }

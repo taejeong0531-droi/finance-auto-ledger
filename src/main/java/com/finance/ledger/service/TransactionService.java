@@ -8,6 +8,7 @@ import com.finance.ledger.repository.TransactionRepository;
 import com.finance.ledger.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -42,5 +43,18 @@ public class TransactionService {
                 .stream()
                 .map(TransactionResponse::new)
                 .toList();
+    }
+
+    @Transactional
+    public void update(Long id, TransactionRequest request) {
+
+        Transaction transaction = transactionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("거래를 찾을 수 없습니다."));
+
+        transaction.update(
+                request.getAmount(),
+                request.getDescription(),
+                request.getType()
+        );
     }
 }
