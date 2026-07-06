@@ -43,7 +43,7 @@ public class TransactionController {
         return ResponseEntity.ok(transactions);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id}") //update
     public ResponseEntity<String> update(
             @PathVariable Long id,
             @RequestBody TransactionRequest request
@@ -52,5 +52,15 @@ public class TransactionController {
         transactionService.update(id, request);
 
         return ResponseEntity.ok("거래 수정 성공");
+    }
+
+    @DeleteMapping("/{id}") //delete
+    public ResponseEntity<String> delete(
+            @PathVariable Long id
+    ) {
+
+        transactionService.delete(id);
+
+        return ResponseEntity.ok("거래 삭제 성공");
     }
 }

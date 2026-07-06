@@ -56,5 +56,13 @@ public class TransactionService {
                 request.getDescription(),
                 request.getType()
         );
+
+    }
+    public void delete(Long id) {
+
+        Transaction transaction = transactionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("거래를 찾을 수 없습니다."));
+
+        transactionRepository.delete(transaction);
     }
 }
