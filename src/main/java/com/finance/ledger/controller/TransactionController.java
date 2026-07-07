@@ -46,20 +46,26 @@ public class TransactionController {
     @PutMapping("/{id}") //update
     public ResponseEntity<String> update(
             @PathVariable Long id,
-            @RequestBody TransactionRequest request
+            @RequestBody TransactionRequest request,
+            @RequestHeader("Authorization") String authorizationHeader
     ) {
+        String token = authorizationHeader.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
 
-        transactionService.update(id, request);
+        transactionService.update(id, request,email);
 
         return ResponseEntity.ok("거래 수정 성공");
     }
 
     @DeleteMapping("/{id}") //delete
     public ResponseEntity<String> delete(
-            @PathVariable Long id
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authorizationHeader
     ) {
+        String token = authorizationHeader.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
 
-        transactionService.delete(id);
+        transactionService.delete(id,email);
 
         return ResponseEntity.ok("거래 삭제 성공");
     }
