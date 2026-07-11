@@ -1,6 +1,7 @@
 package com.finance.ledger.dto;
 
 import lombok.Getter;
+import com.finance.ledger.enums.Category;
 
 @Getter
 public class TransactionRequest {
@@ -10,4 +11,6 @@ public class TransactionRequest {
     private String description;
 
     private String type;
+
+    private Category category;
 }

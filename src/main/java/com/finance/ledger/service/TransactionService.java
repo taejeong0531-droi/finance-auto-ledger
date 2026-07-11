@@ -29,7 +29,9 @@ public class TransactionService {
                 request.getAmount(),
                 request.getDescription(),
                 request.getType(),
+                request.getCategory(),
                 user
+
         );
 
         transactionRepository.save(transaction);
@@ -62,7 +64,8 @@ public class TransactionService {
         transaction.update(
                 request.getAmount(),
                 request.getDescription(),
-                request.getType()
+                request.getType(),
+                request.getCategory()
         );
     }
 
