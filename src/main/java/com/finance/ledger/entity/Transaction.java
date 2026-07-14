@@ -5,6 +5,7 @@ import com.finance.ledger.enums.Category;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import java.time.LocalDate;
 
 @Entity
 @Getter
@@ -22,6 +23,8 @@ public class Transaction {
 
     private String type;
 
+    private LocalDate date;
+
     @Enumerated(EnumType.STRING)
     private Category category;
 
@@ -29,13 +32,19 @@ public class Transaction {
     @JoinColumn(name = "user_id")
     private User user;
 
-    public Transaction(Integer amount, String description, String type,Category category, User user) {
+    public Transaction(Integer amount,
+                       String description,
+                       String type,
+                       Category category,
+                       User user) {
+
         this.amount = amount;
         this.description = description;
         this.type = type;
         this.category = category;
         this.user = user;
 
+        this.date = LocalDate.now();
     }
 
     public void update(Integer amount, String description, String type,Category category) {
