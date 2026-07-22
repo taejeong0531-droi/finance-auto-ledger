@@ -133,10 +133,26 @@ public class TransactionService {
                 LocalDate date = LocalDate.parse(values[0].trim());
                 String description = values[1].trim();
                 Integer amount = Integer.parseInt(values[2].trim());
-                String type = values[3].trim();
+                String type = values[3].trim().toUpperCase();
+
                 Category category = Category.valueOf(
                         values[4].trim().toUpperCase()
                 );
+
+                boolean alreadyExists =
+                        transactionRepository
+                                .existsByUserAndDateAndAmountAndDescriptionAndTypeAndCategory(
+                                        user,
+                                        date,
+                                        amount,
+                                        description,
+                                        type,
+                                        category
+                                );
+
+                if (alreadyExists) {
+                    continue;
+                }
 
                 Transaction transaction = new Transaction(
                         amount,
@@ -151,9 +167,7 @@ public class TransactionService {
             }
 
             if (transactions.isEmpty()) {
-                throw new IllegalArgumentException(
-                        "저장할 거래내역이 없습니다."
-                );
+                return;
             }
 
             transactionRepository.saveAll(transactions);
