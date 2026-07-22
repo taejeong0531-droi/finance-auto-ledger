@@ -38,13 +38,22 @@ public class Transaction {
                        Category category,
                        User user) {
 
+        this(amount, description, type, category, user, LocalDate.now());
+    }
+
+    public Transaction(Integer amount,
+                       String description,
+                       String type,
+                       Category category,
+                       User user,
+                       LocalDate date) {
+
         this.amount = amount;
         this.description = description;
         this.type = type;
         this.category = category;
         this.user = user;
-
-        this.date = LocalDate.now();
+        this.date = date;
     }
 
     public void update(Integer amount, String description, String type,Category category) {

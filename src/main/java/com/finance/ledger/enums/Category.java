@@ -1,6 +1,5 @@
 package com.finance.ledger.enums;
 
-import com.finance.ledger.entity.User;
 
 public enum Category{
 

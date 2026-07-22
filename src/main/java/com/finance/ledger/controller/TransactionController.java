@@ -7,6 +7,7 @@ import com.finance.ledger.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -68,5 +69,18 @@ public class TransactionController {
         transactionService.delete(id,email);
 
         return ResponseEntity.ok("거래 삭제 성공");
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<String> importCsv(
+            @RequestParam("file") MultipartFile file,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+        String token = authorizationHeader.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+
+        transactionService.importCsv(file, email);
+
+        return ResponseEntity.ok("CSV 거래내역 등록 성공");
     }
 }
