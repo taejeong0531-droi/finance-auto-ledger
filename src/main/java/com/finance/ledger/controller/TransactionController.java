@@ -79,8 +79,8 @@ public class TransactionController {
         String token = authorizationHeader.replace("Bearer ", "");
         String email = jwtTokenProvider.getEmailFromToken(token);
 
-        transactionService.importCsv(file, email);
+        String result = transactionService.importCsv(file, email);
 
-        return ResponseEntity.ok("CSV 거래내역 등록 성공");
+        return ResponseEntity.ok(result);
     }
 }

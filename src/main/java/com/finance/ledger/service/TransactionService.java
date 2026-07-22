@@ -92,13 +92,15 @@ public class TransactionService {
     }
 
     @Transactional
-    public void importCsv(MultipartFile file, String email) {
+    public String importCsv(MultipartFile file, String email) {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         List<Transaction> transactions = new ArrayList<>();
+
+        int duplicateCount = 0;
 
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(
@@ -112,12 +114,12 @@ public class TransactionService {
             while ((line = reader.readLine()) != null) {
                 lineNumber++;
 
-                // 첫 번째 줄은 헤더이므로 건너뛰기
+                // 첫 번째 줄은 CSV 헤더
                 if (lineNumber == 1) {
                     continue;
                 }
 
-                // 빈 줄은 건너뛰기
+                // 빈 줄은 무시
                 if (line.isBlank()) {
                     continue;
                 }
@@ -151,6 +153,7 @@ public class TransactionService {
                                 );
 
                 if (alreadyExists) {
+                    duplicateCount++;
                     continue;
                 }
 
@@ -166,11 +169,14 @@ public class TransactionService {
                 transactions.add(transaction);
             }
 
-            if (transactions.isEmpty()) {
-                return;
+            int savedCount = transactions.size();
+
+            if (!transactions.isEmpty()) {
+                transactionRepository.saveAll(transactions);
             }
 
-            transactionRepository.saveAll(transactions);
+            return "신규 저장 " + savedCount
+                    + "건, 중복 제외 " + duplicateCount + "건";
 
         } catch (IllegalArgumentException e) {
             throw e;
