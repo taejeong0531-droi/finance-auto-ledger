@@ -5,11 +5,12 @@ import com.finance.ledger.dto.MonthlySummaryResponse;
 import com.finance.ledger.dto.TransactionRequest;
 import com.finance.ledger.dto.TransactionResponse;
 import com.finance.ledger.service.TransactionService;
+import com.finance.ledger.enums.Category;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import java.util.Map;
 import java.util.List;
 
 @RestController
@@ -96,6 +97,24 @@ public class TransactionController {
 
         MonthlySummaryResponse response =
                 transactionService.getMonthlySummary(
+                        year,
+                        month,
+                        email
+                );
+
+        return ResponseEntity.ok(response);
+    }
+    @GetMapping("/category-summary")
+    public ResponseEntity<Map<Category, Integer>> getCategorySummary(
+            @RequestParam int year,
+            @RequestParam int month,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+        String token = authorizationHeader.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+
+        Map<Category, Integer> response =
+                transactionService.getMonthlyExpenseByCategory(
                         year,
                         month,
                         email
