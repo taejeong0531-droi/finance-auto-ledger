@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.finance.ledger.dto.MonthlySummaryResponse;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -18,6 +19,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.EnumMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -92,7 +95,7 @@ public class TransactionService {
     }
 
     @Transactional
-    public String importCsv(MultipartFile file, String email) {
+    public String importCsv(MultipartFile file, String email) { //기존 csv 처리 코드
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() ->
@@ -124,7 +127,7 @@ public class TransactionService {
                     continue;
                 }
 
-                String[] values = line.split(",");
+                String[] values = line.split(",",-1);
 
                 if (values.length != 5) {
                     throw new IllegalArgumentException(
@@ -137,9 +140,22 @@ public class TransactionService {
                 Integer amount = Integer.parseInt(values[2].trim());
                 String type = values[3].trim().toUpperCase();
 
-                Category category = Category.valueOf(
-                        values[4].trim().toUpperCase()
-                );
+                String categoryValue = values[4].trim();
+
+                Category category;
+
+                if (categoryValue.isBlank()) {
+                    category = classifyCategory(description);
+                } else {
+                    try {
+                        category = Category.valueOf(categoryValue.toUpperCase());
+                    } catch (IllegalArgumentException e) {
+                        throw new IllegalArgumentException(
+                                lineNumber + "번째 줄의 카테고리가 올바르지 않습니다: "
+                                        + categoryValue
+                        );
+                    }
+                }
 
                 boolean alreadyExists =
                         transactionRepository
@@ -187,5 +203,174 @@ public class TransactionService {
                     e
             );
         }
+    }
+    private Category classifyCategory(String description) { //자동분류 코드
+
+        String value = description.toLowerCase();
+
+        if (containsAny(
+                value,
+                "스타벅스",
+                "카페",
+                "커피",
+                "식당",
+                "편의점",
+                "배달",
+                "맥도날드"
+        )) {
+            return Category.FOOD;
+        }
+
+        if (containsAny(
+                value,
+                "버스",
+                "지하철",
+                "택시",
+                "카카오택시",
+                "주유",
+                "교통"
+        )) {
+            return Category.TRANSPORT;
+        }
+
+        if (containsAny(
+                value,
+                "쿠팡",
+                "무신사",
+                "쇼핑",
+                "마켓컬리",
+                "네이버페이"
+        )) {
+            return Category.SHOPPING;
+        }
+
+        if (containsAny(
+                value,
+                "월세",
+                "관리비",
+                "전기",
+                "수도",
+                "가스",
+                "통신비",
+                "휴대폰"
+        )) {
+            return Category.LIVING;
+        }
+
+        if (containsAny(
+                value,
+                "월급",
+                "급여",
+                "상여금",
+                "성과급"
+        )) {
+            return Category.SALARY;
+        }
+
+        return Category.ETC;
+    }
+
+    private boolean containsAny(String value, String... keywords) {//키워드 확인 코드
+
+        for (String keyword : keywords) {
+            if (value.contains(keyword)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public MonthlySummaryResponse getMonthlySummary(
+            int year,
+            int month,
+            String email
+    ) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.withDayOfMonth(
+                startDate.lengthOfMonth()
+        );
+
+        List<Transaction> transactions =
+                transactionRepository.findByUserAndDateBetween(
+                        user,
+                        startDate,
+                        endDate
+                );
+
+        int totalIncome = transactions.stream()
+                .filter(transaction ->
+                        "INCOME".equalsIgnoreCase(transaction.getType()))
+                .mapToInt(Transaction::getAmount)
+                .sum();
+
+        int totalExpense = transactions.stream()
+                .filter(transaction ->
+                        "EXPENSE".equalsIgnoreCase(transaction.getType()))
+                .mapToInt(Transaction::getAmount)
+                .sum();
+
+        int balance = totalIncome - totalExpense;
+
+        return new MonthlySummaryResponse(
+                year,
+                month,
+                totalIncome,
+                totalExpense,
+                balance
+        );
+    }
+
+    public Map<Category, Integer> getMonthlyExpenseByCategory(
+            int year,
+            int month,
+            String email
+    ) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.withDayOfMonth(
+                startDate.lengthOfMonth()
+        );
+
+        List<Transaction> transactions =
+                transactionRepository.findByUserAndDateBetween(
+                        user,
+                        startDate,
+                        endDate
+                );
+
+        Map<Category, Integer> categoryExpenses =
+                new EnumMap<>(Category.class);
+
+        // 모든 카테고리를 우선 0원으로 설정
+        for (Category category : Category.values()) {
+            categoryExpenses.put(category, 0);
+        }
+
+        for (Transaction transaction : transactions) {
+
+            // 지출 거래만 계산
+            if (!"EXPENSE".equalsIgnoreCase(transaction.getType())) {
+                continue;
+            }
+
+            Category category = transaction.getCategory();
+            Integer amount = transaction.getAmount();
+
+            categoryExpenses.merge(
+                    category,
+                    amount,
+                    Integer::sum
+            );
+        }
+
+        return categoryExpenses;
     }
 }

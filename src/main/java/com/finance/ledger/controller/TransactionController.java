@@ -1,6 +1,7 @@
 package com.finance.ledger.controller;
 
 import com.finance.ledger.config.JwtTokenProvider;
+import com.finance.ledger.dto.MonthlySummaryResponse;
 import com.finance.ledger.dto.TransactionRequest;
 import com.finance.ledger.dto.TransactionResponse;
 import com.finance.ledger.service.TransactionService;
@@ -82,5 +83,24 @@ public class TransactionController {
         String result = transactionService.importCsv(file, email);
 
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<MonthlySummaryResponse> getMonthlySummary(
+            @RequestParam int year,
+            @RequestParam int month,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+        String token = authorizationHeader.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+
+        MonthlySummaryResponse response =
+                transactionService.getMonthlySummary(
+                        year,
+                        month,
+                        email
+                );
+
+        return ResponseEntity.ok(response);
     }
 }
